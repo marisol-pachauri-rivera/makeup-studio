@@ -19,6 +19,12 @@
       "skillPath": "skills/generar-tech-design/SKILL.md",
       "computedHash": "77dae8eb9f76d2297ec120ef2d53b445186865c791d33b33ab342af1a6a8d68c"
     },
+    "mermaid-diagrams": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/mermaid-diagrams/SKILL.md",
+      "computedHash": "b6c206a3cab0333a1d3d3cf27114099d0d5f25eb07d86c8f12472b7aa7d59a4c"
+    },
     "revision-adversarial": {
       "source": "adminoryslabs/Armory",
       "sourceType": "github",
