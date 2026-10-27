@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792882135534,
+      "tag": "0000_brave_miracleman",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792882257712,
+      "tag": "0001_reservas",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792882354258,
+      "tag": "0002_reserva_linea_exclusion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792903642829,
+      "tag": "0003_intento_login",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793001714348,
+      "tag": "0004_reserva_clave_idempotencia",
+      "breakpoints": true
+    }
+  ]
+}

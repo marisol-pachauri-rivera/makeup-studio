@@ -1,0 +1,734 @@
+{
+  "id": "e7e10cd8-5c97-4116-a33c-f5667386adc4",
+  "prevId": "55ca5c76-4bff-4473-a23b-05e9559226d0",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.bloqueo_agenda": {
+      "name": "bloqueo_agenda",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "bloqueo_agenda_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "maquilladora_id": {
+          "name": "maquilladora_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inicio": {
+          "name": "inicio",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fin": {
+          "name": "fin",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "bloqueo_agenda_maquilladora_idx": {
+          "name": "bloqueo_agenda_maquilladora_idx",
+          "columns": [
+            {
+              "expression": "maquilladora_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bloqueo_agenda_maquilladora_id_maquilladora_id_fk": {
+          "name": "bloqueo_agenda_maquilladora_id_maquilladora_id_fk",
+          "tableFrom": "bloqueo_agenda",
+          "tableTo": "maquilladora",
+          "columnsFrom": [
+            "maquilladora_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "bloqueo_agenda_fin_posterior": {
+          "name": "bloqueo_agenda_fin_posterior",
+          "value": "\"bloqueo_agenda\".\"fin\" > \"bloqueo_agenda\".\"inicio\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.horario_trabajo": {
+      "name": "horario_trabajo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "horario_trabajo_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "maquilladora_id": {
+          "name": "maquilladora_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_fin": {
+          "name": "hora_fin",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "horario_trabajo_maquilladora_idx": {
+          "name": "horario_trabajo_maquilladora_idx",
+          "columns": [
+            {
+              "expression": "maquilladora_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "horario_trabajo_maquilladora_id_maquilladora_id_fk": {
+          "name": "horario_trabajo_maquilladora_id_maquilladora_id_fk",
+          "tableFrom": "horario_trabajo",
+          "tableTo": "maquilladora",
+          "columnsFrom": [
+            "maquilladora_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "horario_trabajo_dia_valido": {
+          "name": "horario_trabajo_dia_valido",
+          "value": "\"horario_trabajo\".\"dia_semana\" between 0 and 6"
+        },
+        "horario_trabajo_fin_posterior": {
+          "name": "horario_trabajo_fin_posterior",
+          "value": "\"horario_trabajo\".\"hora_fin\" > \"horario_trabajo\".\"hora_inicio\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.intento_login": {
+      "name": "intento_login",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "intento_login_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "usuario": {
+          "name": "usuario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "intentado_en": {
+          "name": "intentado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "intento_login_usuario_instante_idx": {
+          "name": "intento_login_usuario_instante_idx",
+          "columns": [
+            {
+              "expression": "usuario",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "intentado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.maquilladora": {
+      "name": "maquilladora",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "maquilladora_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.reserva": {
+      "name": "reserva",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "reserva_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "token": {
+          "name": "token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nombre_contacto": {
+          "name": "nombre_contacto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefono_contacto": {
+          "name": "telefono_contacto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pendiente_pago'"
+        },
+        "numero_operacion": {
+          "name": "numero_operacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clave_idempotencia": {
+          "name": "clave_idempotencia",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "monto_total": {
+          "name": "monto_total",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_reembolso": {
+          "name": "estado_reembolso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'no_aplica'"
+        },
+        "motivo_rechazo": {
+          "name": "motivo_rechazo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_cancelacion": {
+          "name": "motivo_cancelacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creada_en": {
+          "name": "creada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "validada_en": {
+          "name": "validada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "reserva_token_unico": {
+          "name": "reserva_token_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        },
+        "reserva_numero_operacion_unico": {
+          "name": "reserva_numero_operacion_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "numero_operacion"
+          ]
+        },
+        "reserva_clave_idempotencia_unica": {
+          "name": "reserva_clave_idempotencia_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "clave_idempotencia"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "reserva_estado_valido": {
+          "name": "reserva_estado_valido",
+          "value": "\"reserva\".\"estado\" in ('pendiente_pago', 'pendiente_validacion', 'confirmada', 'cancelada')"
+        },
+        "reserva_reembolso_valido": {
+          "name": "reserva_reembolso_valido",
+          "value": "\"reserva\".\"estado_reembolso\" in ('no_aplica', 'pendiente', 'realizado')"
+        },
+        "reserva_motivo_cancelacion_valido": {
+          "name": "reserva_motivo_cancelacion_valido",
+          "value": "\"reserva\".\"motivo_cancelacion\" is null or \"reserva\".\"motivo_cancelacion\" in ('vencida', 'clienta', 'studio')"
+        },
+        "reserva_monto_no_negativo": {
+          "name": "reserva_monto_no_negativo",
+          "value": "\"reserva\".\"monto_total\" >= 0"
+        },
+        "reserva_estado_numero_coherente": {
+          "name": "reserva_estado_numero_coherente",
+          "value": "(\"reserva\".\"estado\" = 'pendiente_pago' and \"reserva\".\"numero_operacion\" is null)\n        or (\"reserva\".\"estado\" in ('pendiente_validacion', 'confirmada') and \"reserva\".\"numero_operacion\" is not null)\n        or \"reserva\".\"estado\" = 'cancelada'"
+        },
+        "reserva_cancelacion_coherente": {
+          "name": "reserva_cancelacion_coherente",
+          "value": "(\"reserva\".\"estado\" = 'cancelada') = (\"reserva\".\"motivo_cancelacion\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.reserva_linea": {
+      "name": "reserva_linea",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "reserva_linea_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "reserva_id": {
+          "name": "reserva_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persona": {
+          "name": "persona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servicio_id": {
+          "name": "servicio_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "maquilladora_id": {
+          "name": "maquilladora_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inicio": {
+          "name": "inicio",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fin": {
+          "name": "fin",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "precio": {
+          "name": "precio",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {
+        "reserva_linea_reserva_idx": {
+          "name": "reserva_linea_reserva_idx",
+          "columns": [
+            {
+              "expression": "reserva_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reserva_linea_reserva_id_reserva_id_fk": {
+          "name": "reserva_linea_reserva_id_reserva_id_fk",
+          "tableFrom": "reserva_linea",
+          "tableTo": "reserva",
+          "columnsFrom": [
+            "reserva_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "reserva_linea_servicio_id_servicio_id_fk": {
+          "name": "reserva_linea_servicio_id_servicio_id_fk",
+          "tableFrom": "reserva_linea",
+          "tableTo": "servicio",
+          "columnsFrom": [
+            "servicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "reserva_linea_maquilladora_id_maquilladora_id_fk": {
+          "name": "reserva_linea_maquilladora_id_maquilladora_id_fk",
+          "tableFrom": "reserva_linea",
+          "tableTo": "maquilladora",
+          "columnsFrom": [
+            "maquilladora_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "reserva_linea_fin_posterior": {
+          "name": "reserva_linea_fin_posterior",
+          "value": "\"reserva_linea\".\"fin\" > \"reserva_linea\".\"inicio\""
+        },
+        "reserva_linea_precio_no_negativo": {
+          "name": "reserva_linea_precio_no_negativo",
+          "value": "\"reserva_linea\".\"precio\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.servicio": {
+      "name": "servicio",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "servicio_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "precio": {
+          "name": "precio",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracion_minutos": {
+          "name": "duracion_minutos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "servicio_precio_no_negativo": {
+          "name": "servicio_precio_no_negativo",
+          "value": "\"servicio\".\"precio\" >= 0"
+        },
+        "servicio_duracion_positiva": {
+          "name": "servicio_duracion_positiva",
+          "value": "\"servicio\".\"duracion_minutos\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.usuario_admin": {
+      "name": "usuario_admin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "usuario_admin_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "usuario": {
+          "name": "usuario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "usuario_admin_usuario_unico": {
+          "name": "usuario_admin_usuario_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "usuario"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
