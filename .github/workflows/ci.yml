@@ -137,13 +137,15 @@ jobs:
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
         run: |
+          # Sin la barra final: "$PRODUCTION_URL/" con una barra guardada da "//" y Vercel responde 308.
+          BASE="${PRODUCTION_URL%/}"
           sleep 120
           for intento in $(seq 1 20); do
-            home=$(curl -s -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/") || home=000
-            admin=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$PRODUCTION_URL/admin") || admin=000
+            home=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/") || home=000
+            admin=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$BASE/admin") || admin=000
             echo "intento $intento: / -> $home, /admin -> $admin"
             if [ "$home" = "200" ] && echo "$admin" | grep -Eq '^30[0-9] .*(login|signin)'; then
-              cc=$(curl -s -D - -o /dev/null "$PRODUCTION_URL/reservar" | tr -d '\r' | grep -i '^cache-control:' || true)
+              cc=$(curl -s -D - -o /dev/null "$BASE/reservar" | tr -d '\r' | grep -i '^cache-control:' || true)
               echo "$cc" | grep -qi 'no-store' || { echo "::error::/reservar sin Cache-Control no-store"; exit 1; }
               echo "Smoke test OK"
               exit 0

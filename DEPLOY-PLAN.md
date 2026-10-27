@@ -1,7 +1,7 @@
 # Deploy Plan — makeup-studio
 
 Fecha: 2026-10-26
-Estado: GENERADO (plan aprobado por la usuaria el 2026-10-26; archivos creados, nada ejecutado)
+Estado: EJECUTADO PARCIAL (primer deploy hecho; smoke test corregido y pendiente de verse en verde)
 
 ## Resumen del proyecto
 
@@ -110,4 +110,16 @@ Creados/modificados, sin ejecutar nada: `.github/workflows/ci.yml` (acciones fij
 Decisiones de implementación: el smoke test espera 120 s y luego sondea (no puede distinguir el deployment nuevo del anterior sin un token de Vercel; es una limitación conocida). Los inputs/outputs de las acciones de Neon (`parent_branch`, `db_url`, `db_url_pooled`, `branch_id`) se confirman en la primera corrida.
 Variables/secretos que el workflow espera: secret `NEON_API_KEY`; vars `NEON_PROJECT_ID`, `NEON_PARENT_BRANCH` (el branch `dev`), `PRODUCTION_URL`; en el environment `production`: secrets `DATABASE_URL`, `VERCEL_DEPLOY_HOOK_URL`.
 
-_(EXECUTE y VERIFY: pendientes)_
+### EXECUTE y VERIFY (2026-10-27)
+Cada acción la autorizó la usuaria por separado.
+
+- **Configuración (hecha por la usuaria):** secret `NEON_API_KEY`, variables `NEON_PROJECT_ID`, `NEON_PARENT_BRANCH` (`dev`, no producción: el branch de producción tiene datos reales de clientas y no tiene los datos demo de los E2E) y `PRODUCTION_URL`; environment `production` con revisora requerida y secrets `DATABASE_URL` y `VERCEL_DEPLOY_HOOK_URL`. Una revisión previa al merge detectó que el environment no tenía revisora (el job habría desplegado sin aprobación); se corrigió antes de mergear.
+- **PR #1, primera corrida:** `verificar` OK; `e2e` falló por falta de configuración (esperado). Tras configurar, el reintento de `e2e` pasó: 3 tests Playwright OK (~26 s), migraciones aplicadas al branch efímero y branch borrado. Los nombres de inputs/outputs de las acciones de Neon eran correctos.
+- **Merge a `main` (squash, `d25d2ff`) y primer deploy (run 40455084103):** `verificar` y `e2e` OK; `desplegar` esperó aprobación y fue aprobado por la usuaria. Migración de producción y Deploy Hook: OK. **Smoke test: FALLÓ** (20 intentos con 308).
+- **Causa del fallo:** `PRODUCTION_URL` estaba guardada con barra final; el script pedía `…app//` y Vercel respondía 308. No era un fallo del deploy. Comprobación manual posterior: `/` 200, `/admin` redirige a `/admin/login`, `/reservar` con `Cache-Control: private, no-store`.
+- **Corrección:** la usuaria quitó la barra de la variable y el script ahora la normaliza (`${PRODUCTION_URL%/}`). El smoke test corregido aún no se ha ejecutado: se verá en el próximo deploy.
+- **Resuelto:** el Deploy Hook funcionó con `deploymentEnabled: false` en `vercel.json` (el riesgo que estaba abierto).
+- **Sin verificar aún:** que el deployment de producción de Vercel corresponda al SHA `d25d2ff` (el smoke test no lo puede probar sin token de Vercel) y que Vercel no haya hecho un deploy duplicado por auto-deploy.
+- **Pendiente:** branch protection de `main` exigiendo `verificar` y `e2e` (acción manual de la usuaria).
+
+Lección para el próximo Deploy Pass: validar el formato de las variables que el pipeline usa para construir URLs, y revisar las protecciones del environment antes del primer merge.
