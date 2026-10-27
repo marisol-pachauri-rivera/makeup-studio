@@ -1,7 +1,7 @@
 # Deploy Plan — makeup-studio
 
 Fecha: 2026-10-26
-Estado: DISEÑADO (pendiente de aprobación; nada generado ni ejecutado)
+Estado: GENERADO (plan aprobado por la usuaria el 2026-10-26; archivos creados, nada ejecutado)
 
 ## Resumen del proyecto
 
@@ -105,4 +105,9 @@ Nada está autorizado todavía. Cada una se pide por separado en su momento:
 
 ## Registro de ejecución y verificación
 
-_(vacío: se completa después de EXECUTE y VERIFY)_
+### GENERATE (2026-10-26)
+Creados/modificados, sin ejecutar nada: `.github/workflows/ci.yml` (acciones fijadas por SHA), `vercel.json` (auto-deploy de `main` desactivado), `playwright.config.ts` (en CI: build + start), `package.json` (script `test:e2e`), y eliminado `tests-play/example.spec.ts`.
+Decisiones de implementación: el smoke test espera 120 s y luego sondea (no puede distinguir el deployment nuevo del anterior sin un token de Vercel; es una limitación conocida). Los inputs/outputs de las acciones de Neon (`parent_branch`, `db_url`, `db_url_pooled`, `branch_id`) se confirman en la primera corrida.
+Variables/secretos que el workflow espera: secret `NEON_API_KEY`; vars `NEON_PROJECT_ID`, `NEON_PARENT_BRANCH` (el branch `dev`), `PRODUCTION_URL`; en el environment `production`: secrets `DATABASE_URL`, `VERCEL_DEPLOY_HOOK_URL`.
+
+_(EXECUTE y VERIFY: pendientes)_

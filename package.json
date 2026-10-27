@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed-admin": "tsx scripts/seed-admin.ts"
