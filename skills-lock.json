@@ -36,6 +36,12 @@
       "sourceType": "github",
       "skillPath": "skills/revision-adversarial/SKILL.md",
       "computedHash": "665292baf3d60cab35610557052d21b2aebedd483cd5f82dad4924e2a988cb07"
+    },
+    "security-pass": {
+      "source": "adminoryslabs/Armory",
+      "sourceType": "github",
+      "skillPath": "skills/security-pass/SKILL.md",
+      "computedHash": "f2443bf5b3505b8bb1ef023127541b815b94541c747b8fd552ba2101de2a3eb5"
     }
   }
 }
