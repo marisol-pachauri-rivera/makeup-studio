@@ -1,0 +1,154 @@
+name: CI
+
+# Ver DEPLOY-PLAN.md. Producción se despliega solo desde el job `desplegar` (Deploy Hook de Vercel),
+# nunca por el auto-deploy de Git: vercel.json lo desactiva para `main`.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      # Vitest completo: la suite de integración levanta Postgres real con Testcontainers (ADR 0011).
+      - run: npm run test
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run build
+
+  e2e:
+    needs: verificar
+    # Los PR de forks no reciben secretos: sin ellos no hay branch de Neon.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+
+      - name: Branch efímero de Neon desde dev
+        id: neon
+        uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c # v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          parent_branch: ${{ vars.NEON_PARENT_BRANCH }}
+          branch_name: ci-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Credenciales efímeras de la corrida
+        run: |
+          AUTH_SECRET="$(openssl rand -base64 33)"
+          E2E_ADMIN_PASSWORD="$(openssl rand -hex 24)"
+          echo "::add-mask::$AUTH_SECRET"
+          echo "::add-mask::$E2E_ADMIN_PASSWORD"
+          {
+            echo "AUTH_SECRET=$AUTH_SECRET"
+            echo "E2E_ADMIN_USUARIO=e2e-ci"
+            echo "E2E_ADMIN_PASSWORD=$E2E_ADMIN_PASSWORD"
+            echo "AUTH_TRUST_HOST=true"
+          } >> "$GITHUB_ENV"
+
+      - name: Migrar y crear la administradora E2E (solo en el branch efímero)
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+          ADMIN_USUARIO: ${{ env.E2E_ADMIN_USUARIO }}
+          ADMIN_PASSWORD: ${{ env.E2E_ADMIN_PASSWORD }}
+        run: |
+          npm run db:migrate
+          npm run db:seed-admin
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Playwright
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+        run: npm run test:e2e
+
+      - name: Reporte de Playwright
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Borrar el branch efímero
+        if: always() && steps.neon.outputs.branch_id != ''
+        uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ${{ steps.neon.outputs.branch_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+  desplegar:
+    needs: [verificar, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # El environment exige aprobación manual (revisora requerida) antes de que corra este job.
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+
+      # Primero el esquema, luego el código: las migraciones deben ser aditivas (el código N-1
+      # tiene que funcionar con el esquema N). Un rollback de código no revierte datos.
+      - name: Migrar producción
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:migrate
+
+      - name: Disparar el deploy en Vercel
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK_URL" > /dev/null
+
+      # No hay endpoint de salud (ADR 0006) ni forma de ligar el hook a un deployment sin token de
+      # Vercel: se espera el build y se verifican páginas que ya existen. No crea datos.
+      - name: Smoke test
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          sleep 120
+          for intento in $(seq 1 20); do
+            home=$(curl -s -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/") || home=000
+            admin=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$PRODUCTION_URL/admin") || admin=000
+            echo "intento $intento: / -> $home, /admin -> $admin"
+            if [ "$home" = "200" ] && echo "$admin" | grep -Eq '^30[0-9] .*(login|signin)'; then
+              cc=$(curl -s -D - -o /dev/null "$PRODUCTION_URL/reservar" | tr -d '\r' | grep -i '^cache-control:' || true)
+              echo "$cc" | grep -qi 'no-store' || { echo "::error::/reservar sin Cache-Control no-store"; exit 1; }
+              echo "Smoke test OK"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::El smoke test falló: revisar el deployment en Vercel (rollback es decisión manual)."
+          exit 1

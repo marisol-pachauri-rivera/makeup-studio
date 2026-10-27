@@ -20,9 +20,11 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
   // `next dev` escucha en el 3000 por defecto; el proyecto no lo cambia.
+  // En CI se prueba el build de producción (más parecido a Vercel que `next dev`).
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    timeout: process.env.CI ? 300_000 : 60_000,
   },
 });
