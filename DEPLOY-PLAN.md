@@ -1,7 +1,7 @@
 # Deploy Plan — makeup-studio
 
 Fecha: 2026-10-26
-Estado: EJECUTADO PARCIAL (primer deploy hecho; smoke test corregido y pendiente de verse en verde)
+Estado: VERIFICADO (pipeline probado de punta a punta en dos deploys; quedan pendientes manuales de la usuaria, ver el registro)
 
 ## Resumen del proyecto
 
@@ -117,9 +117,14 @@ Cada acción la autorizó la usuaria por separado.
 - **PR #1, primera corrida:** `verificar` OK; `e2e` falló por falta de configuración (esperado). Tras configurar, el reintento de `e2e` pasó: 3 tests Playwright OK (~26 s), migraciones aplicadas al branch efímero y branch borrado. Los nombres de inputs/outputs de las acciones de Neon eran correctos.
 - **Merge a `main` (squash, `d25d2ff`) y primer deploy (run 40455084103):** `verificar` y `e2e` OK; `desplegar` esperó aprobación y fue aprobado por la usuaria. Migración de producción y Deploy Hook: OK. **Smoke test: FALLÓ** (20 intentos con 308).
 - **Causa del fallo:** `PRODUCTION_URL` estaba guardada con barra final; el script pedía `…app//` y Vercel respondía 308. No era un fallo del deploy. Comprobación manual posterior: `/` 200, `/admin` redirige a `/admin/login`, `/reservar` con `Cache-Control: private, no-store`.
-- **Corrección:** la usuaria quitó la barra de la variable y el script ahora la normaliza (`${PRODUCTION_URL%/}`). El smoke test corregido aún no se ha ejecutado: se verá en el próximo deploy.
+- **Corrección:** la usuaria quitó la barra de la variable y el script ahora la normaliza (`${PRODUCTION_URL%/}`). El smoke test corregido se verificó en el segundo deploy (ver abajo).
 - **Resuelto:** el Deploy Hook funcionó con `deploymentEnabled: false` en `vercel.json` (el riesgo que estaba abierto).
 - **Sin verificar aún:** que el deployment de producción de Vercel corresponda al SHA `d25d2ff` (el smoke test no lo puede probar sin token de Vercel) y que Vercel no haya hecho un deploy duplicado por auto-deploy.
-- **Pendiente:** branch protection de `main` exigiendo `verificar` y `e2e` (acción manual de la usuaria).
+- **Segundo deploy (PR #2, run 40457399622):** `verificar`, `e2e` y `desplegar` OK, con aprobación manual de la usuaria. **Smoke test OK en el primer intento** (`/` 200, `/admin` → `/admin/login`). Con esto el pipeline queda probado de punta a punta: tests, Playwright con branch efímero, aprobación, migración, Deploy Hook y smoke test.
+- **Pendiente (manual, de la usuaria):**
+  - Branch protection de `main` exigiendo `verificar` y `e2e`; sin ella el gate se puede saltar con un push directo.
+  - Comprobar en Vercel → Deployments que los deployments de producción corresponden a los SHA del pipeline y que no hay deploys duplicados por auto-deploy (el smoke test no lo puede demostrar sin token de Vercel).
+  - Opcional: restringir el environment `production` a la rama `main`.
+- **Limitaciones conocidas:** el smoke test no distingue el deployment nuevo del anterior; no hay rollback automático (decisión manual, Instant Rollback en Vercel); un rollback de código no revierte datos, y las migraciones solo avanzan.
 
 Lección para el próximo Deploy Pass: validar el formato de las variables que el pipeline usa para construir URLs, y revisar las protecciones del environment antes del primer merge.
