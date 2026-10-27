@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { ServicioPublico } from "@/lib/publico/catalogo";
-import { ListaServicios } from "./lista-servicios";
+import { imagenDePrueba, ListaServicios } from "./lista-servicios";
 
 const servicio = (extra: Partial<ServicioPublico> = {}): ServicioPublico => ({
   id: 1,
@@ -53,5 +53,19 @@ describe("ListaServicios", () => {
     expect(screen.getByText(/no hay servicios disponibles/i)).toBeInTheDocument();
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.queryByRole("list")).toBeNull();
+  });
+});
+
+describe("imágenes de prueba", () => {
+  it("cada servicio muestra una imagen decorativa, sin texto alternativo", () => {
+    const { container } = render(<ListaServicios servicios={[servicio({ id: 1 }), servicio({ id: 2, nombre: "Peinado" })]} />);
+    const imagenes = container.querySelectorAll("img");
+    expect(imagenes).toHaveLength(2);
+    imagenes.forEach((img) => expect(img).toHaveAttribute("alt", ""));
+  });
+
+  it("el reparto es estable y recorre las tres imágenes", () => {
+    expect(imagenDePrueba(5)).toBe(imagenDePrueba(5));
+    expect(new Set([1, 2, 3].map(imagenDePrueba)).size).toBe(3);
   });
 });
